@@ -166,7 +166,7 @@ function renderCart(){
         </select>
         Color:
         <select onchange="cart[${idx}].color=this.value">
-          ${['Black','Gray','Navy'].map(c=>`<option ${c===i.color?'selected':''}>${c}</option>`).join('')}
+          ${['Black','Gray','Navy','Orange'].map(c=>`<option ${c===i.color?'selected':''}>${c}</option>`).join('')}
         </select>
         Quantity:
         <input type="number" min="1" value="${i.qty}"
@@ -257,7 +257,7 @@ function downloadCSV(){
     <label>Size</label>
     <select id="sizeSelect"><option>S</option><option>M</option><option>L</option><option>XL</option></select>
     <label>Color</label>
-    <select id="colorSelect"><option>Black</option><option>Gray</option><option>Navy</option></select>
+    <select id="colorSelect"><option>Black</option><option>Gray</option><option>Navy</option><option>Orange</option></select>
     <label>Quantity</label>
     <input type="number" id="qtyInput" min="1" value="1">
     <button onclick="addToCart()">Add to Cart</button>
