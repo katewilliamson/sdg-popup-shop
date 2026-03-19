@@ -17,7 +17,22 @@ header{
   justify-content:space-between;
   align-items:center
 }
-.brand{font-weight:bold;font-size:20px}
+/*.brand{font-weight:bold;font-size:20px}*/
+  
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;              /* Space between logo and text */
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.brand-logo {
+  height: 32px;           /* Controls logo size */
+  width: auto;
+  display: block;
+}
+
 .actions{display:flex;gap:16px;align-items:center}
 .cart{cursor:pointer;position:relative}
 .badge{
@@ -216,7 +231,7 @@ function downloadCSV(){
 <header>
   
 <div class="brand">
-  <img src="SDG Logo.png" alt="SDG Logo" class="brand-logo">
+  <img src="sdg-logo.png" alt="SDG Logo" class="brand-logo">
   <span>Solution Design Group</span>
 </div>
 
