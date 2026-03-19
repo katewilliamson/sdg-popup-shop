@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SDG Pop-Up Shop</title>
+
+<style>
+:root{--sdg-blue:#003A8F}
+body{font-family:Arial,Helvetica,sans-serif;margin:0;background:#f6f7f8;color:#222}
+
+header{
+  background:var(--sdg-blue);
+  color:#fff;
+  padding:16px 24px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center
+}
+.brand{font-weight:bold;font-size:20px}
+.actions{display:flex;gap:16px;align-items:center}
+.cart{cursor:pointer;position:relative}
+.badge{
+  position:absolute;
+  top:-6px;
+  right:-10px;
+  background:#e53935;
+  color:#fff;
+  border-radius:50%;
+  font-size:12px;
+  padding:2px 6px
+}
+
+main{padding:24px}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:20px
+}
+
+/* Cards */
+.card{
+  background:#fff;
+  border-radius:8px;
+  padding:16px;
+  box-shadow:0 2px 6px rgba(0,0,0,.1);
+  transition:transform .25s ease, box-shadow .25s ease;
+  display:flex;
+  flex-direction:column;
+}
+.card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 8px 18px rgba(0,0,0,.15)
+}
+
+/* Product images */
+.product-image{
+  width:100%;
+  height:160px;
+  object-fit:contain;
+  background:#f0f2f5;
+  border-radius:6px;
+  margin-bottom:10px
+}
+
+/* Align buttons at bottom */
+.card button{margin-top:auto}
+
+button{
+  background:var(--sdg-blue);
+  color:#fff;
+  border:none;
+  padding:8px 12px;
+  border-radius:4px;
+  cursor:pointer
+}
+button.secondary{background:#eee;color:#333}
+button:disabled{opacity:.6;cursor:default}
+
+.modal,.drawer{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45)
+}
+.modal-content{
+  position:relative;
+  background:#fff;
+  width:360px;
+  margin:8% auto;
+  padding:20px;
+  border-radius:8px
+}
+.close-btn{
+  position:absolute;
+  top:10px;
+  right:12px;
+  font-size:20px;
+  cursor:pointer;
+  color:#666
+}
+
+.drawer-content{
+  background:#fff;
+  width:360px;
+  position:absolute;
+  right:0;
+  top:0;
+  height:100%;
+  padding:20px;
+  overflow:auto
+}
+
+input,select{
+  width:100%;
+  padding:6px;
+  margin-bottom:10px;
+  box-sizing:border-box
+}
+input[type="number"]{appearance:textfield;-moz-appearance:textfield}
+
+.error{color:#c62828;margin-bottom:10px}
+.confirmation{color:#2e7d32;margin-top:10px}
+
+ul{list-style:none;padding:0}
+</style>
+
+<script>
+let cart=[];
+let purchases=[];
+
+function openOptions(name){
+  optName.innerText=name;
+  optionsModal.style.display='block';
+}
+function closeOptions(){optionsModal.style.display='none';}
+
+function addToCart(){
+  cart.push({
+    name:optName.innerText,
+    size:sizeSelect.value,
+    color:colorSelect.value,
+    qty:parseInt(qtyInput.value)
+  });
+  updateCount();
+  closeOptions();
+}
+
+function updateCount(){
+  count.innerText=cart.reduce((s,i)=>s+i.qty,0);
+}
+
+function openCart(){cartDrawer.style.display='block';renderCart();}
+function closeCart(){cartDrawer.style.display='none';}
+
+function renderCart(){
+  cartList.innerHTML='';
+  cart.forEach((i,idx)=>{
+    cartList.innerHTML+=`
+      <li>
+        <strong>${i.name}</strong><br>
+        Size:
+        <select onchange="cart[${idx}].size=this.value">
+          ${['S','M','L','XL'].map(s=>`<option ${s===i.size?'selected':''}>${s}</option>`).join('')}
+        </select>
+        Color:
+        <select onchange="cart[${idx}].color=this.value">
+          ${['Black','Gray','Navy'].map(c=>`<option ${c===i.color?'selected':''}>${c}</option>`).join('')}
+        </select>
+        Quantity:
+        <input type="number" min="1" value="${i.qty}"
+          onchange="cart[${idx}].qty=parseInt(this.value);updateCount()">
+        <button onclick="cart.splice(${idx},1);renderCart();updateCount()">Remove</button>
+      </li><hr>`;
+  });
+}
+
+function checkout(){
+  cartDrawer.style.display='none';
+  checkoutError.style.display='none';
+  confirmationMessage.style.display='none';
+  submitBtn.style.display='inline-block';
+  checkoutModal.style.display='block';
+}
+function closeCheckout(){checkoutModal.style.display='none';}
+
+function submitOrder(){
+  const first=firstName.value.trim();
+  const last=lastInitial.value.trim();
+  if(!first||!last){
+    checkoutError.style.display='block';
+    return;
+  }
+  cart.forEach(i=>{
+    purchases.push([first+' '+last+'.',i.name,i.size,i.color,i.qty].join(','));
+  });
+  checkoutError.style.display='none';
+  confirmationMessage.style.display='block';
+  submitBtn.style.display='none';
+  cart=[];updateCount();
+}
+
+function downloadCSV(){
+  const csv="Shopper,Item,Size,Color,Quantity\n"+purchases.join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='purchase_summary.csv';
+  a.click();
+}
+</script>
+</head>
+
+<body>
+
+<header>
+  <div class="brand">Solution Design Group</div>
+  <div class="actions">
+    <button onclick="downloadCSV()">Purchase Summary</button>
+    <div class="cart" onclick="openCart()">🛒 Cart <span class="badge" id="count">0</span></div>
+  </div>
+</header>
+
+<main>
+<h1>SDG Pop‑Up Shop</h1>
+<p><small>Internal pre‑order pop‑up. No payments collected.</small></p>
+
+<div class="grid">
+  <div class="card">
+    <img src="hoodie.PNG" alt="Cotton Hoodie" class="product-image">
+    <h3>Cotton Hoodie</h3>
+    <p>$35</p>
+    <button onclick="openOptions('Cotton Hoodie')">Select Options</button>
+  </div>
+
+  <div class="card">
+    <img src="quarter zip.PNG" alt="Quarter-Zip Pullover" class="product-image">
+    <h3>Quarter‑Zip Pullover</h3>
+    <p>$55</p>
+    <button onclick="openOptions('Quarter‑Zip Pullover')">Select Options</button>
+  </div>
+
+  <div class="card">
+    <img src="snap back hat.PNG" alt="Snapback Hat" class="product-image">
+    <h3>Snapback Hat</h3>
+    <p>$28</p>
+    <button onclick="openOptions('Snapback Hat')">Select Options</button>
+  </div>
+</div>
+</main>
+
+<!-- OPTIONS MODAL -->
+<div class="modal" id="optionsModal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeOptions()">×</span>
+    <h3 id="optName"></h3>
+    <label>Size</label>
+    <select id="sizeSelect"><option>S</option><option>M</option><option>L</option><option>XL</option></select>
+    <label>Color</label>
+    <select id="colorSelect"><option>Black</option><option>Gray</option><option>Navy</option></select>
+    <label>Quantity</label>
+    <input type="number" id="qtyInput" min="1" value="1">
+    <button onclick="addToCart()">Add to Cart</button>
+    <button class="secondary" onclick="closeOptions()">Cancel</button>
+  </div>
+</div>
+
+<!-- CART -->
+<div class="drawer" id="cartDrawer">
+  <div class="drawer-content">
+    <h3>Your Cart</h3>
+    <ul id="cartList"></ul>
+    <button onclick="checkout()">Checkout</button>
+    <button class="secondary" onclick="closeCart()">Close</button>
+  </div>
+</div>
+
+<!-- CHECKOUT -->
+<div class="modal" id="checkoutModal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeCheckout()">×</span>
+    <label>First Name</label>
+    <input id="firstName">
+    <label>Last Initial</label>
+    <input id="lastInitial" maxlength="1">
+    <p id="checkoutError" class="error" style="display:none;">Please enter your first name and last name initial.</p>
+    <p id="confirmationMessage" class="confirmation" style="display:none;">✅ Order submitted. Your SDG Bucks will be deducted.</p>
+    <button id="submitBtn" onclick="submitOrder()">Submit Order</button>
+  </div>
+</div>
+
+</body>
+</html>
+``
